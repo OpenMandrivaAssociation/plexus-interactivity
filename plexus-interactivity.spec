@@ -40,7 +40,7 @@
 
 Name:           plexus-interactivity
 Version:        1.0
-Release:        %mkrel 0.1.a5.2.2.1
+Release:        %mkrel 0.1.a5.2.2.2
 Epoch:          0
 Summary:        Plexus Interactivity Handler Component
 License:        Apache License
@@ -63,8 +63,6 @@ Source4:        plexus-interactivity-1.0-jline-project.xml
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %if %{gcj_support}
-Requires(post): java-gcj-compat
-Requires(postun): java-gcj-compat
 BuildRequires:  java-gcj-compat-devel
 %else
 BuildArch:      noarch
