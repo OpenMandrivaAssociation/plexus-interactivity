@@ -40,7 +40,7 @@
 
 Name:           plexus-interactivity
 Version:        1.0
-Release:        %mkrel 0.1.a5.2.2.2
+Release:        %mkrel 0.1.a5.2.2.3
 Epoch:          0
 Summary:        Plexus Interactivity Handler Component
 License:        Apache License
@@ -68,7 +68,7 @@ BuildRequires:  java-gcj-compat-devel
 BuildArch:      noarch
 BuildRequires:  java-devel
 %endif
-BuildRequires:  jpackage-utils >= 0:1.6
+BuildRequires:  java-rpmbuild >= 0:1.6
 BuildRequires:  ant >= 0:1.6
 BuildRequires:  ant-nodeps 
 %if %{with_maven}
