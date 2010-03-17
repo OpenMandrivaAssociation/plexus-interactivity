@@ -40,7 +40,7 @@
 
 Name:           plexus-interactivity
 Version:        1.0
-Release:        %mkrel 0.1.a5.2.2.3
+Release:        %mkrel 0.1.a5.2.2.4
 Epoch:          0
 Summary:        Plexus Interactivity Handler Component
 License:        Apache License
