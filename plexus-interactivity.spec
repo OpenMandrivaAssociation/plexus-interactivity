@@ -28,52 +28,36 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# We just want to use ant
-%define _without_maven 1
-
-# If you don't want to build with maven, and use straight ant instead,
-# give rpmbuild option '--without maven'
-
-%define with_maven %{!?_without_maven:1}%{?_without_maven:0}
-%define without_maven %{?_without_maven:1}%{!?_without_maven:0}
-%define gcj_support 1
+%global parent plexus
+%global subname interactivity
 
 Name:           plexus-interactivity
 Version:        1.0
-Release:        %mkrel 0.1.a5.2.2.6
-Epoch:          0
+Release:        0.4.a6.7
 Summary:        Plexus Interactivity Handler Component
-License:        Apache License
+License:        MIT
 Group:          Development/Java
 URL:            http://plexus.codehaus.org/
 # svn export \
-#   svn://svn.plexus.codehaus.org/plexus/tags/plexus-interactivity-1.0-alpha-5/
-# tar cjf plexus-interactivity-1.0-alpha-5-src.tar.bz2 \
-#   plexus-interactivity-1.0-alpha-5
-# md5sum 7b2a814da29fc1118bc5b4e4bc6225eb
-Source0:        plexus-interactivity-1.0-alpha-5-src.tar.bz2
+#   http://svn.codehaus.org/plexus/plexus-components/tags/plexus-interactivity-1.0-alpha-6/
+# tar caf plexus-interactivity-1.0-alpha-6-src.tar.xz \
+#   plexus-interactivity-1.0-alpha-6
+Source0:        plexus-interactivity-1.0-alpha-6-src.tar.xz
 
-Source1:        plexus-interactivity-1.0-api-build.xml
-Source2:        plexus-interactivity-1.0-jline-build.xml
-%if %{with_maven}
-Source3:        plexus-interactivity-1.0-api-project.xml
-Source4:        plexus-interactivity-1.0-jline-project.xml
-%endif
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
-
-%if %{gcj_support}
-BuildRequires:  java-gcj-compat-devel
-%else
 BuildArch:      noarch
-BuildRequires:  java-devel
-%endif
-BuildRequires:  java-rpmbuild >= 0:1.6
+BuildRequires:  jpackage-utils >= 0:1.6
 BuildRequires:  ant >= 0:1.6
-BuildRequires:  ant-nodeps 
-%if %{with_maven}
-BuildRequires:  maven
-%endif
+BuildRequires:  ant-nodeps
+BuildRequires:  maven2
+BuildRequires:  maven-compiler-plugin
+BuildRequires:  maven-javadoc-plugin
+BuildRequires:  maven-site-plugin
+BuildRequires:  maven-surefire-maven-plugin
+BuildRequires:  maven-install-plugin
+BuildRequires:  maven-resources-plugin
+BuildRequires:  maven-jar-plugin
 BuildRequires:  jline
 BuildRequires:  plexus-container-default
 BuildRequires:  plexus-utils
@@ -93,113 +77,70 @@ is like a J2EE application server, without all the baggage.
 %package javadoc
 Summary:        Javadoc for %{name}
 Group:          Development/Java
+Requires:       jpackage-utils
 
 %description javadoc
-Javadoc for %{name}.
+API documentation for %{name}.
 
 %prep
-%setup -q -n plexus-interactivity-1.0-alpha-5
-cp %{SOURCE1} plexus-interactivity-api/build.xml
-cp %{SOURCE2} plexus-interactivity-jline/build.xml
-%if %{with_maven}
-cp %{SOURCE3} plexus-interactivity-api/project.xml
-cp %{SOURCE4} plexus-interactivity-jline/project.xml
-%endif
+%setup -q -n plexus-interactivity-1.0-alpha-6
 
 %build
-%if %{with_maven}
-mkdir -p .maven/repository/maven/jars
-build-jar-repository .maven/repository/maven/jars \
-maven-jelly-tags
-
-mkdir -p .maven/repository/JPP/jars
-build-jar-repository -s -p .maven/repository/JPP/jars \
-jline plexus/container-default plexus/utils
-export MAVEN_HOME_LOCAL=$(pwd)/.maven
-%endif
-
-pushd plexus-interactivity-api
-%if %{with_maven}
-maven \
-        -Dmaven.repo.remote=file:/usr/share/maven/repository \
-        -Dmaven.home.local=$MAVEN_HOME_LOCAL \
-        jar:install javadoc
-
-%else
-
-mkdir -p target/lib
-build-jar-repository -s -p target/lib plexus/container-default plexus/utils
-%{ant} jar javadoc
-%endif
-popd
-
-pushd plexus-interactivity-jline
-%if %{with_maven}
-maven \
-        -Dmaven.repo.remote=file:/usr/share/maven/repository \
-        -Dmaven.home.local=$MAVEN_HOME_LOCAL \
-        jar:install javadoc
-
-%else
-
-mkdir -p target/lib
-cp \
-  ../plexus-interactivity-api/target/plexus-interactivity-api-1.0-alpha-5.jar \
-  target/lib
-build-jar-repository -s -p target/lib jline plexus/container-default
-ant jar javadoc
-%endif
-popd
+export MAVEN_REPO_LOCAL=$(pwd)/.m2/repository
+mvn-jpp \
+        -e \
+        -Dmaven2.jpp.mode=true \
+        -Dmaven.repo.local=$MAVEN_REPO_LOCAL \
+        -Dmaven.test.skip=true \
+        install javadoc:aggregate
 
 %install
-rm -rf $RPM_BUILD_ROOT
 # jars
 install -d -m 755 $RPM_BUILD_ROOT%{_javadir}/plexus
 install -pm 644 \
-  plexus-interactivity-api/target/%{name}-api-%{version}-alpha-5.jar \
-  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-api-%{version}.jar
+  plexus-interactivity-api/target/%{name}-api-%{version}-alpha-6.jar \
+  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-api.jar
 install -pm 644 \
-  plexus-interactivity-jline/target/%{name}-jline-%{version}-alpha-5.jar \
-  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-jline-%{version}.jar
-(cd $RPM_BUILD_ROOT%{_javadir}/plexus && \
- for jar in *-%{version}*; do \
-     ln -sf ${jar} `echo $jar| sed  "s|-%{version}||g"`; \
- done \
-)
+  plexus-interactivity-jline/target/%{name}-jline-%{version}-alpha-6.jar \
+  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-jline.jar
+
+install -d -m 755 $RPM_BUILD_ROOT%{_mavenpomdir}
+install -pm 644 \
+pom.xml $RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-%{subname}.pom
+install -pm 644 \
+plexus-interactivity-api/pom.xml \
+ 	$RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-interactivity-api.pom
+install -pm 644 \
+plexus-interactivity-jline/pom.xml \
+ 	$RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-interactivity-jline.pom
+
+%add_to_maven_depmap org.codehaus.plexus %{name} %{version} JPP/%{parent} %{subname}
+%add_to_maven_depmap org.codehaus.plexus %{name}-api %{version} JPP/%{parent} interactivity-api
+%add_to_maven_depmap org.codehaus.plexus %{name}-jline %{version} JPP/%{parent} interactivity-jline
 
 # javadoc
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}/api
-cp -pr plexus-interactivity-api/target/docs/apidocs/* \
-  $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}/api
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}/jline
-cp -pr plexus-interactivity-jline/target/docs/apidocs/* \
-  $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}/jline
-ln -s %{name}-%{version} $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+cp -pr target/site/apidocs/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}
 
-%if %{gcj_support}
-%{_bindir}/aot-compile-rpm
-%endif
+%pre javadoc
+# workaround for rpm bug #447156 (can be removed in F-17)
+[ $1 -gt 1 ] && [ -L %{_javadocdir}/%{name} ] && \
+rm -rf $(readlink -f %{_javadocdir}/%{name}) %{_javadocdir}/%{name} || :
 
-%clean
-rm -rf $RPM_BUILD_ROOT
-
-%if %{gcj_support}
 %post
-%{update_gcjdb}
+%update_maven_depmap
 
 %postun
-%{clean_gcjdb}
-%endif
+%update_maven_depmap
 
 %files
 %defattr(-,root,root,-)
 %{_javadir}/*
-%if %{gcj_support}
-%dir %{_libdir}/gcj/%{name}
-%attr(-,root,root) %{_libdir}/gcj/%{name}/*
-%endif
+%{_mavenpomdir}/*
+%{_mavendepmapfragdir}/*
 
 %files javadoc
 %defattr(-,root,root,-)
 %doc %{_javadocdir}/*
+
+
