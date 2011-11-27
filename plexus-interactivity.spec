@@ -33,7 +33,7 @@
 
 Name:           plexus-interactivity
 Version:        1.0
-Release:        0.4.a6.7
+Release:        0.4.a6.9
 Summary:        Plexus Interactivity Handler Component
 License:        MIT
 Group:          Development/Java
