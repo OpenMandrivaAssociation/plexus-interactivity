@@ -96,31 +96,31 @@ mvn-jpp \
 
 %install
 # jars
-install -d -m 755 $RPM_BUILD_ROOT%{_javadir}/plexus
+install -d -m 755 %{buildroot}%{_javadir}/plexus
 install -pm 644 \
   plexus-interactivity-api/target/%{name}-api-%{version}-alpha-6.jar \
-  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-api.jar
+  %{buildroot}%{_javadir}/plexus/interactivity-api.jar
 install -pm 644 \
   plexus-interactivity-jline/target/%{name}-jline-%{version}-alpha-6.jar \
-  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-jline.jar
+  %{buildroot}%{_javadir}/plexus/interactivity-jline.jar
 
-install -d -m 755 $RPM_BUILD_ROOT%{_mavenpomdir}
+install -d -m 755 %{buildroot}%{_mavenpomdir}
 install -pm 644 \
-pom.xml $RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-%{subname}.pom
+pom.xml %{buildroot}%{_mavenpomdir}/JPP.%{parent}-%{subname}.pom
 install -pm 644 \
 plexus-interactivity-api/pom.xml \
- 	$RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-interactivity-api.pom
+ 	%{buildroot}%{_mavenpomdir}/JPP.%{parent}-interactivity-api.pom
 install -pm 644 \
 plexus-interactivity-jline/pom.xml \
- 	$RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-interactivity-jline.pom
+ 	%{buildroot}%{_mavenpomdir}/JPP.%{parent}-interactivity-jline.pom
 
 %add_to_maven_depmap org.codehaus.plexus %{name} %{version} JPP/%{parent} %{subname}
 %add_to_maven_depmap org.codehaus.plexus %{name}-api %{version} JPP/%{parent} interactivity-api
 %add_to_maven_depmap org.codehaus.plexus %{name}-jline %{version} JPP/%{parent} interactivity-jline
 
 # javadoc
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}
-cp -pr target/site/apidocs/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+install -d -m 755 %{buildroot}%{_javadocdir}/%{name}
+cp -pr target/site/apidocs/* %{buildroot}%{_javadocdir}/%{name}
 
 %pre javadoc
 # workaround for rpm bug #447156 (can be removed in F-17)
