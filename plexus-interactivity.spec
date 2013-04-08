@@ -36,11 +36,11 @@
 
 %define with_maven %{!?_without_maven:1}%{?_without_maven:0}
 %define without_maven %{?_without_maven:1}%{!?_without_maven:0}
-%define gcj_support 1
+%define gcj_support 0
 
 Name:           plexus-interactivity
 Version:        1.0
-Release:        %mkrel 0.1.a5.2.2.7
+Release:        0.1.a5.2.2.8
 Epoch:          0
 Summary:        Plexus Interactivity Handler Component
 License:        Apache License
