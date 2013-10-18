@@ -38,49 +38,43 @@
 %define without_maven %{?_without_maven:1}%{!?_without_maven:0}
 %define gcj_support 0
 
-Name:           plexus-interactivity
-Version:        1.0
-Release:        0.1.a5.2.2.8
-Epoch:          0
-Summary:        Plexus Interactivity Handler Component
-License:        Apache License
-Group:          Development/Java
-URL:            http://plexus.codehaus.org/
+Summary:	Plexus Interactivity Handler Component
+Name:		plexus-interactivity
+Version:	1.0
+Release:	0.1.a5.2.2.8
+License:	Apache License
+Group:		Development/Java
+Url:		http://plexus.codehaus.org/
 # svn export \
 #   svn://svn.plexus.codehaus.org/plexus/tags/plexus-interactivity-1.0-alpha-5/
 # tar cjf plexus-interactivity-1.0-alpha-5-src.tar.bz2 \
 #   plexus-interactivity-1.0-alpha-5
 # md5sum 7b2a814da29fc1118bc5b4e4bc6225eb
-Source0:        plexus-interactivity-1.0-alpha-5-src.tar.bz2
-
-Source1:        plexus-interactivity-1.0-api-build.xml
-Source2:        plexus-interactivity-1.0-jline-build.xml
+Source0:	plexus-interactivity-1.0-alpha-5-src.tar.bz2
+Source1:	plexus-interactivity-1.0-api-build.xml
+Source2:	plexus-interactivity-1.0-jline-build.xml
 %if %{with_maven}
-Source3:        plexus-interactivity-1.0-api-project.xml
-Source4:        plexus-interactivity-1.0-jline-project.xml
+Source3:	plexus-interactivity-1.0-api-project.xml
+Source4:	plexus-interactivity-1.0-jline-project.xml
 %endif
-
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
-
-%if %{gcj_support}
-BuildRequires:  java-gcj-compat-devel
+%if !%{gcj_support}
+BuildArch:	noarch
+BuildRequires:	java-devel
 %else
-BuildArch:      noarch
-BuildRequires:  java-devel
+BuildRequires:	java-gcj-compat-devel
 %endif
-BuildRequires:  java-rpmbuild >= 0:1.6
-BuildRequires:  ant >= 0:1.6
-BuildRequires:  ant-nodeps 
+BuildRequires:	java-rpmbuild >= 0:1.6
+BuildRequires:	ant >= 0:1.6
+BuildRequires:	ant-nodeps 
 %if %{with_maven}
-BuildRequires:  maven
+BuildRequires:	maven
 %endif
-BuildRequires:  jline
-BuildRequires:  plexus-container-default
-BuildRequires:  plexus-utils
-
-Requires:  plexus-container-default
-Requires:  plexus-utils
-Requires:  jline
+BuildRequires:	jline
+BuildRequires:	plexus-container-default
+BuildRequires:	plexus-utils
+Requires:	plexus-container-default
+Requires:	plexus-utils
+Requires:	jline
 
 %description
 The Plexus project seeks to create end-to-end developer tools for
@@ -91,14 +85,14 @@ velocity, etc. Plexus also includes an application server which
 is like a J2EE application server, without all the baggage.
 
 %package javadoc
-Summary:        Javadoc for %{name}
-Group:          Development/Java
+Summary:	Javadoc for %{name}
+Group:		Development/Java
 
 %description javadoc
 Javadoc for %{name}.
 
 %prep
-%setup -q -n plexus-interactivity-1.0-alpha-5
+%setup -qn plexus-interactivity-1.0-alpha-5
 cp %{SOURCE1} plexus-interactivity-api/build.xml
 cp %{SOURCE2} plexus-interactivity-jline/build.xml
 %if %{with_maven}
@@ -141,7 +135,6 @@ maven \
         jar:install javadoc
 
 %else
-
 mkdir -p target/lib
 cp \
   ../plexus-interactivity-api/target/plexus-interactivity-api-1.0-alpha-5.jar \
@@ -152,37 +145,33 @@ ant jar javadoc
 popd
 
 %install
-rm -rf $RPM_BUILD_ROOT
 # jars
-install -d -m 755 $RPM_BUILD_ROOT%{_javadir}/plexus
+install -d -m 755 %{buildroot}%{_javadir}/plexus
 install -pm 644 \
   plexus-interactivity-api/target/%{name}-api-%{version}-alpha-5.jar \
-  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-api-%{version}.jar
+  %{buildroot}%{_javadir}/plexus/interactivity-api-%{version}.jar
 install -pm 644 \
   plexus-interactivity-jline/target/%{name}-jline-%{version}-alpha-5.jar \
-  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-jline-%{version}.jar
-(cd $RPM_BUILD_ROOT%{_javadir}/plexus && \
+  %{buildroot}%{_javadir}/plexus/interactivity-jline-%{version}.jar
+(cd %{buildroot}%{_javadir}/plexus && \
  for jar in *-%{version}*; do \
      ln -sf ${jar} `echo $jar| sed  "s|-%{version}||g"`; \
  done \
 )
 
 # javadoc
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}/api
+install -d -m 755 %{buildroot}%{_javadocdir}/%{name}-%{version}
+install -d -m 755 %{buildroot}%{_javadocdir}/%{name}-%{version}/api
 cp -pr plexus-interactivity-api/target/docs/apidocs/* \
-  $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}/api
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}/jline
+  %{buildroot}%{_javadocdir}/%{name}-%{version}/api
+install -d -m 755 %{buildroot}%{_javadocdir}/%{name}-%{version}/jline
 cp -pr plexus-interactivity-jline/target/docs/apidocs/* \
-  $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}/jline
-ln -s %{name}-%{version} $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+  %{buildroot}%{_javadocdir}/%{name}-%{version}/jline
+ln -s %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
 
 %if %{gcj_support}
 %{_bindir}/aot-compile-rpm
 %endif
-
-%clean
-rm -rf $RPM_BUILD_ROOT
 
 %if %{gcj_support}
 %post
@@ -193,7 +182,6 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %files
-%defattr(-,root,root,-)
 %{_javadir}/*
 %if %{gcj_support}
 %dir %{_libdir}/gcj/%{name}
@@ -201,50 +189,5 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %files javadoc
-%defattr(-,root,root,-)
 %doc %{_javadocdir}/*
 
-
-%changelog
-* Fri Dec 03 2010 Oden Eriksson <oeriksson@mandriva.com> 0:1.0-0.1.a5.2.2.5mdv2011.0
-+ Revision: 607182
-- rebuild
-
-* Wed Mar 17 2010 Oden Eriksson <oeriksson@mandriva.com> 0:1.0-0.1.a5.2.2.4mdv2010.1
-+ Revision: 523675
-- rebuilt for 2010.1
-
-* Wed Jan 02 2008 Olivier Blin <oblin@mandriva.com> 0:1.0-0.1.a5.2.2.3mdv2009.0
-+ Revision: 140733
-- restore BuildRoot
-
-  + Thierry Vignaud <tv@mandriva.org>
-    - kill re-definition of %%buildroot on Pixel's request
-
-* Sun Dec 16 2007 Anssi Hannula <anssi@mandriva.org> 0:1.0-0.1.a5.2.2.3mdv2008.1
-+ Revision: 121006
-- buildrequire java-rpmbuild, i.e. build with icedtea on x86(_64)
-
-* Sat Sep 15 2007 Anssi Hannula <anssi@mandriva.org> 0:1.0-0.1.a5.2.2.2mdv2008.0
-+ Revision: 87312
-- rebuild to filter out autorequires of GCJ AOT objects
-- remove unnecessary Requires(post) on java-gcj-compat
-
-* Wed Jul 04 2007 David Walluck <walluck@mandriva.org> 0:1.0-0.1.a5.2.2.1mdv2008.0
-+ Revision: 47936
-- Import plexus-interactivity
-
-
-
-* Tue Mar 13 2007 Matt Wringe <mwringe@redhat.com> 1.0-0.1.a5.2jpp.2
-- Add missing build requires for ant-nodeps
-
-* Fri Feb 16 2007 Andrew Overholt <overholt@redhat.com> 1.0-0.1.a5.2jpp.1
-- Remove javadoc symlinking
-
-* Thu Feb 23 2006 Fernando Nasser <fnasser@redhat.com> - 0:1.0-0.a5.2jpp
-- First JPP 1.7 build
-- With remavenization to 1.1 by Deepak Bhole <dbhole@redhat.com>
-
-* Mon Nov 07 2005 Ralph Apel <r.apel at r-apel.de> - 0:1.0-0.a5.1jpp
-- First JPackage build
