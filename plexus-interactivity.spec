@@ -1,3 +1,4 @@
+%{?_javapackages_macros:%_javapackages_macros}
 # Copyright (c) 2000-2005, JPackage Project
 # All rights reserved.
 #
@@ -28,53 +29,42 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# We just want to use ant
-%define _without_maven 1
+%global parent plexus
+%global subname interactivity
 
-# If you don't want to build with maven, and use straight ant instead,
-# give rpmbuild option '--without maven'
+Name:           plexus-interactivity
+Version:        1.0
+Release:        0.11.alpha6.1%{?dist}
+Epoch:          0
+Summary:        Plexus Interactivity Handler Component
+License:        MIT
 
-%define with_maven %{!?_without_maven:1}%{?_without_maven:0}
-%define without_maven %{?_without_maven:1}%{!?_without_maven:0}
-%define gcj_support 0
-
-Summary:	Plexus Interactivity Handler Component
-Name:		plexus-interactivity
-Version:	1.0
-Release:	0.1.a5.2.2.8
-License:	Apache License
-Group:		Development/Java
-Url:		http://plexus.codehaus.org/
+URL:            http://plexus.codehaus.org/
 # svn export \
-#   svn://svn.plexus.codehaus.org/plexus/tags/plexus-interactivity-1.0-alpha-5/
-# tar cjf plexus-interactivity-1.0-alpha-5-src.tar.bz2 \
-#   plexus-interactivity-1.0-alpha-5
-# md5sum 7b2a814da29fc1118bc5b4e4bc6225eb
-Source0:	plexus-interactivity-1.0-alpha-5-src.tar.bz2
-Source1:	plexus-interactivity-1.0-api-build.xml
-Source2:	plexus-interactivity-1.0-jline-build.xml
-%if %{with_maven}
-Source3:	plexus-interactivity-1.0-api-project.xml
-Source4:	plexus-interactivity-1.0-jline-project.xml
-%endif
-%if !%{gcj_support}
-BuildArch:	noarch
-BuildRequires:	java-devel
-%else
-BuildRequires:	java-gcj-compat-devel
-%endif
-BuildRequires:	java-rpmbuild >= 0:1.6
-BuildRequires:	ant >= 0:1.6
-BuildRequires:	ant-nodeps 
-%if %{with_maven}
-BuildRequires:	maven
-%endif
-BuildRequires:	jline
-BuildRequires:	plexus-container-default
-BuildRequires:	plexus-utils
-Requires:	plexus-container-default
-Requires:	plexus-utils
-Requires:	jline
+#   http://svn.codehaus.org/plexus/plexus-components/tags/plexus-interactivity-1.0-alpha-6/
+# tar caf plexus-interactivity-1.0-alpha-6-src.tar.xz \
+#   plexus-interactivity-1.0-alpha-6
+Source0:        plexus-interactivity-1.0-alpha-6-src.tar.xz
+Patch1:         plexus-interactivity-dependencies.patch
+
+BuildArch:      noarch
+BuildRequires:  jpackage-utils >= 0:1.6
+BuildRequires:  ant >= 0:1.6
+BuildRequires:  maven-local
+BuildRequires:  maven-compiler-plugin
+BuildRequires:  maven-javadoc-plugin
+BuildRequires:  maven-site-plugin
+BuildRequires:  maven-surefire-maven-plugin
+BuildRequires:  maven-install-plugin
+BuildRequires:  maven-resources-plugin
+BuildRequires:  maven-jar-plugin
+BuildRequires:  jline
+BuildRequires:  plexus-utils
+BuildRequires:  plexus-component-api
+
+Requires:  plexus-component-api
+Requires:  plexus-utils
+Requires:  jline
 
 %description
 The Plexus project seeks to create end-to-end developer tools for
@@ -85,109 +75,135 @@ velocity, etc. Plexus also includes an application server which
 is like a J2EE application server, without all the baggage.
 
 %package javadoc
-Summary:	Javadoc for %{name}
-Group:		Development/Java
+Summary:        Javadoc for %{name}
+
+Requires:       jpackage-utils
 
 %description javadoc
-Javadoc for %{name}.
+API documentation for %{name}.
 
 %prep
-%setup -qn plexus-interactivity-1.0-alpha-5
-cp %{SOURCE1} plexus-interactivity-api/build.xml
-cp %{SOURCE2} plexus-interactivity-jline/build.xml
-%if %{with_maven}
-cp %{SOURCE3} plexus-interactivity-api/project.xml
-cp %{SOURCE4} plexus-interactivity-jline/project.xml
-%endif
+%setup -q -n plexus-interactivity-1.0-alpha-6
+%patch1 -p1
 
 %build
-%if %{with_maven}
-mkdir -p .maven/repository/maven/jars
-build-jar-repository .maven/repository/maven/jars \
-maven-jelly-tags
-
-mkdir -p .maven/repository/JPP/jars
-build-jar-repository -s -p .maven/repository/JPP/jars \
-jline plexus/container-default plexus/utils
-export MAVEN_HOME_LOCAL=$(pwd)/.maven
-%endif
-
-pushd plexus-interactivity-api
-%if %{with_maven}
-maven \
-        -Dmaven.repo.remote=file:/usr/share/maven/repository \
-        -Dmaven.home.local=$MAVEN_HOME_LOCAL \
-        jar:install javadoc
-
-%else
-
-mkdir -p target/lib
-build-jar-repository -s -p target/lib plexus/container-default plexus/utils
-%{ant} jar javadoc
-%endif
-popd
-
-pushd plexus-interactivity-jline
-%if %{with_maven}
-maven \
-        -Dmaven.repo.remote=file:/usr/share/maven/repository \
-        -Dmaven.home.local=$MAVEN_HOME_LOCAL \
-        jar:install javadoc
-
-%else
-mkdir -p target/lib
-cp \
-  ../plexus-interactivity-api/target/plexus-interactivity-api-1.0-alpha-5.jar \
-  target/lib
-build-jar-repository -s -p target/lib jline plexus/container-default
-ant jar javadoc
-%endif
-popd
+mvn-rpmbuild -e \
+        -Dmaven.test.skip=true \
+        install javadoc:aggregate
 
 %install
 # jars
-install -d -m 755 %{buildroot}%{_javadir}/plexus
+install -d -m 755 $RPM_BUILD_ROOT%{_javadir}/plexus
 install -pm 644 \
-  plexus-interactivity-api/target/%{name}-api-%{version}-alpha-5.jar \
-  %{buildroot}%{_javadir}/plexus/interactivity-api-%{version}.jar
+  plexus-interactivity-api/target/%{name}-api-%{version}-alpha-6.jar \
+  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-api.jar
 install -pm 644 \
-  plexus-interactivity-jline/target/%{name}-jline-%{version}-alpha-5.jar \
-  %{buildroot}%{_javadir}/plexus/interactivity-jline-%{version}.jar
-(cd %{buildroot}%{_javadir}/plexus && \
- for jar in *-%{version}*; do \
-     ln -sf ${jar} `echo $jar| sed  "s|-%{version}||g"`; \
- done \
-)
+  plexus-interactivity-jline/target/%{name}-jline-%{version}-alpha-6.jar \
+  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-jline.jar
+
+install -d -m 755 $RPM_BUILD_ROOT%{_mavenpomdir}
+install -pm 644 \
+pom.xml $RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-%{subname}.pom
+install -pm 644 \
+plexus-interactivity-api/pom.xml \
+        $RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-interactivity-api.pom
+install -pm 644 \
+plexus-interactivity-jline/pom.xml \
+        $RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-interactivity-jline.pom
+
+%add_maven_depmap JPP.%{parent}-%{subname}.pom
+%add_maven_depmap JPP.%{parent}-interactivity-api.pom  plexus/interactivity-api.jar
+%add_maven_depmap JPP.%{parent}-interactivity-jline.pom  plexus/interactivity-jline.jar
 
 # javadoc
-install -d -m 755 %{buildroot}%{_javadocdir}/%{name}-%{version}
-install -d -m 755 %{buildroot}%{_javadocdir}/%{name}-%{version}/api
-cp -pr plexus-interactivity-api/target/docs/apidocs/* \
-  %{buildroot}%{_javadocdir}/%{name}-%{version}/api
-install -d -m 755 %{buildroot}%{_javadocdir}/%{name}-%{version}/jline
-cp -pr plexus-interactivity-jline/target/docs/apidocs/* \
-  %{buildroot}%{_javadocdir}/%{name}-%{version}/jline
-ln -s %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
-
-%if %{gcj_support}
-%{_bindir}/aot-compile-rpm
+install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+cp -pr target/site/apidocs/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+%if 0%{?fedora}
+%else
+# rpm5 parser...
+sed -i 's|1.0-alpha-6|1.0.alpha.6|g;' %{buildroot}%{_mavendepmapfragdir}/*
 %endif
 
-%if %{gcj_support}
-%post
-%{update_gcjdb}
-
-%postun
-%{clean_gcjdb}
-%endif
+%pre javadoc
+# workaround for rpm bug #447156 (can be removed in F-17)
+[ $1 -gt 1 ] && [ -L %{_javadocdir}/%{name} ] && \
+rm -rf $(readlink -f %{_javadocdir}/%{name}) %{_javadocdir}/%{name} || :
 
 %files
 %{_javadir}/*
-%if %{gcj_support}
-%dir %{_libdir}/gcj/%{name}
-%attr(-,root,root) %{_libdir}/gcj/%{name}/*
-%endif
+%{_mavenpomdir}/*
+%{_mavendepmapfragdir}/*
 
 %files javadoc
 %doc %{_javadocdir}/*
 
+
+%changelog
+* Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.11.alpha6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+
+* Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.10.alpha6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
+
+* Wed Feb 06 2013 Java SIG <java-devel@lists.fedoraproject.org> - 0:1.0-0.9.alpha6
+- Update for https://fedoraproject.org/wiki/Fedora_19_Maven_Rebuild
+- Replace maven BuildRequires with maven-local
+
+* Tue Dec 11 2012 Michal Srb <msrb@redhat.com> - 0:1.0-0.8.alpha6
+- Removed dependency on plexus-container-default (Resolves: #878573)
+- Fixed rpmlint warning
+
+* Sat Jul 21 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.7.alpha6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
+
+* Wed May  2 2012 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:1.0-0.6.alpha6
+- Add patch to fix build issues
+
+* Sat Jan 14 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.5.a6.8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
+
+* Tue Nov 29 2011 Alexander Kurtakov <akurtako@redhat.com> 0:1.0-0.4.a6.8
+- Build with maven 3.
+- Adapt to current guidelines.
+
+* Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.4.a6.7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
+* Wed Dec  1 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:1.0-0.3.a6.7
+- Fix pom filenames (Resolves rhbz#655821)
+- Cleanups according to new guidelines
+
+* Wed Oct 6 2010 Alexander Kurtakov <akurtako@redhat.com> 0:1.0-0.3.a6.6
+- Use javadoc:aggregate.
+
+* Wed Jul 21 2010 Alexander Kurtakov <akurtako@redhat.com> 0:1.0-0.3.a6.5
+- Really fix depmaps.
+
+* Wed Jul 21 2010 Alexander Kurtakov <akurtako@redhat.com> 0:1.0-0.3.a6.4
+- Add parent/subname defines to fix poms/depmaps.
+
+* Wed Jul 21 2010 Alexander Kurtakov <akurtako@redhat.com> 0:1.0-0.3.a6.3
+- Update to alpha 6.
+
+* Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.3.a5.2.3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
+
+* Thu Feb 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.2.a5.2.3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
+
+* Wed Jul  9 2008 Tom "spot" Callaway <tcallawa@redhat.com> 1.0-0.1.a5.2.3
+- drop repotag
+- fix license tag
+
+* Tue Mar 13 2007 Matt Wringe <mwringe@redhat.com> 1.0-0.1.a5.2jpp.2
+- Add missing build requires for ant-nodeps
+
+* Fri Feb 16 2007 Andrew Overholt <overholt@redhat.com> 1.0-0.1.a5.2jpp.1
+- Remove javadoc symlinking
+
+* Thu Feb 23 2006 Fernando Nasser <fnasser@redhat.com> - 0:1.0-0.a5.2jpp
+- First JPP 1.7 build
+- With remavenization to 1.1 by Deepak Bhole <dbhole@redhat.com>
+
+* Mon Nov 07 2005 Ralph Apel <r.apel at r-apel.de> - 0:1.0-0.a5.1jpp
+- First JPackage build
