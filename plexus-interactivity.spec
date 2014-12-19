@@ -1,70 +1,26 @@
 %{?_javapackages_macros:%_javapackages_macros}
-# Copyright (c) 2000-2005, JPackage Project
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the
-#    distribution.
-# 3. Neither the name of the JPackage Project nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-
-%global parent plexus
-%global subname interactivity
-
 Name:           plexus-interactivity
 Version:        1.0
-Release:        0.11.alpha6.2%{?dist}
+Release:        0.17.alpha6.1
+Group:		Development/Java
 Epoch:          0
 Summary:        Plexus Interactivity Handler Component
 License:        MIT
-
 URL:            http://plexus.codehaus.org/
+BuildArch:      noarch
 # svn export \
 #   http://svn.codehaus.org/plexus/plexus-components/tags/plexus-interactivity-1.0-alpha-6/
 # tar caf plexus-interactivity-1.0-alpha-6-src.tar.xz \
 #   plexus-interactivity-1.0-alpha-6
 Source0:        plexus-interactivity-1.0-alpha-6-src.tar.xz
 Patch1:         plexus-interactivity-dependencies.patch
+Patch2:         plexus-interactivity-jline2.patch
 
-BuildArch:      noarch
-BuildRequires:  jpackage-utils >= 0:1.6
-BuildRequires:  ant >= 0:1.6
 BuildRequires:  maven-local
-BuildRequires:  maven-compiler-plugin
-BuildRequires:  maven-javadoc-plugin
-BuildRequires:  maven-site-plugin
-BuildRequires:  maven-surefire-maven-plugin
-BuildRequires:  maven-install-plugin
-BuildRequires:  maven-resources-plugin
-BuildRequires:  maven-jar-plugin
-BuildRequires:  jline
-BuildRequires:  plexus-utils
-BuildRequires:  plexus-component-api
-
-Requires:  plexus-component-api
-Requires:  plexus-utils
-Requires:  jline
+BuildRequires:  mvn(jline:jline)
+BuildRequires:  mvn(org.codehaus.plexus:plexus-component-api)
+BuildRequires:  mvn(org.codehaus.plexus:plexus-components:pom:)
+BuildRequires:  mvn(org.codehaus.plexus:plexus-utils)
 
 %description
 The Plexus project seeks to create end-to-end developer tools for
@@ -75,70 +31,69 @@ velocity, etc. Plexus also includes an application server which
 is like a J2EE application server, without all the baggage.
 
 %package javadoc
-Summary:        Javadoc for %{name}
-
-Requires:       jpackage-utils
+Summary:        API documentation for %{name}
 
 %description javadoc
-API documentation for %{name}.
+This package provides %{summary}.
+
+%package api
+Summary:        API for %{name}
+
+%description api
+API module for %{name}.
+
+%package jline
+Summary:        jline module for %{name}
+
+%description jline
+jline module for %{name}.
 
 %prep
 %setup -q -n plexus-interactivity-1.0-alpha-6
 %patch1 -p1
+#patch2 -p1
+
+%mvn_file ":{plexus}-{*}" @1/@2
 
 %build
-mvn-rpmbuild -e \
-        -Dmaven.test.skip=true \
-        install javadoc:aggregate
+%mvn_package ":plexus-interactivity"
+
+%mvn_build -f -s -- -Dmaven.javadoc.skip=true
 
 %install
-# jars
-install -d -m 755 $RPM_BUILD_ROOT%{_javadir}/plexus
-install -pm 644 \
-  plexus-interactivity-api/target/%{name}-api-%{version}-alpha-6.jar \
-  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-api.jar
-install -pm 644 \
-  plexus-interactivity-jline/target/%{name}-jline-%{version}-alpha-6.jar \
-  $RPM_BUILD_ROOT%{_javadir}/plexus/interactivity-jline.jar
+%mvn_install
 
-install -d -m 755 $RPM_BUILD_ROOT%{_mavenpomdir}
-install -pm 644 \
-pom.xml $RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-%{subname}.pom
-install -pm 644 \
-plexus-interactivity-api/pom.xml \
-        $RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-interactivity-api.pom
-install -pm 644 \
-plexus-interactivity-jline/pom.xml \
-        $RPM_BUILD_ROOT%{_mavenpomdir}/JPP.%{parent}-interactivity-jline.pom
-
-%add_maven_depmap JPP.%{parent}-%{subname}.pom
-%add_maven_depmap JPP.%{parent}-interactivity-api.pom  plexus/interactivity-api.jar
-%add_maven_depmap JPP.%{parent}-interactivity-jline.pom  plexus/interactivity-jline.jar
-
-# javadoc
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}
-cp -pr target/site/apidocs/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}
-%if 0%{?fedora}
-%else
 # rpm5 parser...
-sed -i 's|1.0-alpha-6|1.0.alpha.6|g;' %{buildroot}%{_mavendepmapfragdir}/*
-%endif
+sed -i 's|1.0-alpha-6|1.0.alpha.6|g;' %{buildroot}%{_datadir}/maven-metadata/*
 
-%pre javadoc
-# workaround for rpm bug #447156 (can be removed in F-17)
-[ $1 -gt 1 ] && [ -L %{_javadocdir}/%{name} ] && \
-rm -rf $(readlink -f %{_javadocdir}/%{name}) %{_javadocdir}/%{name} || :
-
-%files
-%{_javadir}/*
-%{_mavenpomdir}/*
-%{_mavendepmapfragdir}/*
+%files -f .mfiles
+%files api -f .mfiles-plexus-interactivity-api
+%files jline -f .mfiles-plexus-interactivity-jline
 
 %files javadoc
-%doc %{_javadocdir}/*
 
 
 %changelog
+* Mon Aug  4 2014 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:1.0-0.17.alpha6
+- Fix build-requires on plexus-components-pom
+
+* Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.16.alpha6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+
+* Tue Mar 04 2014 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:1.0-0.15.alpha6
+- Use Requires: java-headless rebuild (#1067528)
+
+* Fri Feb 21 2014 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:1.0-0.14.alpha6
+- Remove requires on subpackages from main package
+
+* Fri Feb 21 2014 Michael Simacek <msimacek@redhat.com> - 0:1.0-0.13.alpha6
+- Split into subpackages
+
+* Tue Oct 29 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:1.0-0.12.alpha6
+- Build with XMvn
+- Remove %%pre javadoc scriplet
+- Port to jline2, resolves: rhbz#1022978
+
 * Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.11.alpha6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 
@@ -207,3 +162,4 @@ rm -rf $(readlink -f %{_javadocdir}/%{name}) %{_javadocdir}/%{name} || :
 
 * Mon Nov 07 2005 Ralph Apel <r.apel at r-apel.de> - 0:1.0-0.a5.1jpp
 - First JPackage build
+
