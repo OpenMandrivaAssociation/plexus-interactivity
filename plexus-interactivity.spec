@@ -1,7 +1,7 @@
 %{?_javapackages_macros:%_javapackages_macros}
 Name:           plexus-interactivity
 Version:        1.0
-Release:        0.17.alpha6.1
+Release:        0.17.alpha6.2
 Group:		Development/Java
 Epoch:          0
 Summary:        Plexus Interactivity Handler Component
@@ -17,7 +17,7 @@ Patch1:         plexus-interactivity-dependencies.patch
 Patch2:         plexus-interactivity-jline2.patch
 
 BuildRequires:  maven-local
-BuildRequires:  mvn(jline:jline)
+BuildRequires:  mvn(jline:jline) >=2
 BuildRequires:  mvn(org.codehaus.plexus:plexus-component-api)
 BuildRequires:  mvn(org.codehaus.plexus:plexus-components:pom:)
 BuildRequires:  mvn(org.codehaus.plexus:plexus-utils)
@@ -51,7 +51,7 @@ jline module for %{name}.
 %prep
 %setup -q -n plexus-interactivity-1.0-alpha-6
 %patch1 -p1
-#patch2 -p1
+%patch2 -p1
 
 %mvn_file ":{plexus}-{*}" @1/@2
 
