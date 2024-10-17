@@ -6,7 +6,7 @@ Group:		Development/Java
 Epoch:          0
 Summary:        Plexus Interactivity Handler Component
 License:        MIT
-URL:            http://plexus.codehaus.org/
+URL:            https://plexus.codehaus.org/
 BuildArch:      noarch
 # svn export \
 #   http://svn.codehaus.org/plexus/plexus-components/tags/plexus-interactivity-1.0-alpha-6/
